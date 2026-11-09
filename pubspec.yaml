@@ -1,4 +1,4 @@
-name: void
+name: void_app
 description: A minimalist pure black nothing app.
 publish_to: 'none'
 version: 1.0.0+1

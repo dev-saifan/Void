@@ -21,7 +21,7 @@ jobs:
           cache: true
 
       - name: Scaffold Platform Folders
-        run: flutter create . --org com.void.app
+        run: flutter create . --project-name void_app --org com.void.app
 
       - name: Set App Name to Void
         run: |

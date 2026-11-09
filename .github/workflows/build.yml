@@ -1,0 +1,55 @@
+name: Build Signed Void APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v3
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Scaffold Platform Folders
+        run: flutter create . --org com.void.app
+
+      - name: Set App Name to Void
+        run: |
+          sed -i 's/android:label=".*"/android:label="Void"/' android/app/src/main/AndroidManifest.xml
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/private_key.p12
+
+      - name: Create key.properties
+        run: |
+          cat <<EOF > android/app/key.properties
+          storeFile=private_key.p12
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      - name: Setup Dependencies and Icons
+        run: |
+          flutter pub get
+          flutter pub run flutter_launcher_icons
+
+      - name: Build Signed Release APK
+        run: flutter build apk --release
+
+      - name: Upload Signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Void-signed-release
+          path: build/app/outputs/flutter-apk/app-release.apk
